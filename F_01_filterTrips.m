@@ -21,6 +21,16 @@ close all; clear; clc;
 % 13  prev_stop_zone integer,
 % 14  prev_stop_departure_time numeric, //trip start time
 
+% input: list of nodes and coordinates
+% This file is based on the SimMobility output file out.network.txt,
+% format:
+% 1 node_id
+% 2 x_coordinate
+% 3 y_coordinate
+% note that in SimMobility output the coordinates are in utm system in cm !
+% therefore we have to convert them into meters (we do not use coordinates
+% in this script, only the node ids)
+
 % output: 
 % trips in format: 
 % 1 time_sec, integer
@@ -154,7 +164,7 @@ time_sec = hours*60*60 + minutes*60; % size after selection
 
 %% save to file
 disp('5. Save to file...')
-fileTOSave = sprintf('bookings_ecbd_%d.txt', length(ids_witin));
+fileTOSave = sprintf('raw_bookings_ecbd_%d.txt', length(ids_witin));
 bookingFile = fopen(fileTOSave,'w');
 for j = 1:length(ids_witin)
     fprintf(bookingFile,'%0u,%u,%0u,%0u,%s,%s\n', time_sec(j), j, trip_origin_node(j), trip_destination_node(j), trip_purpose{j}, trip_mode{j});
