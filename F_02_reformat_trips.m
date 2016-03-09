@@ -23,8 +23,8 @@ close all; clear; clc;
 % 1 node_id
 % 2 x_coordinate
 % 3 y_coordinate
-% note that in SimMobility output the coordinates are in utm system in cm !
-% therefore we have to convert them into meters
+% note that in SimMobility output the coordinates are in utm system in m
+% amod simulator uses utm meters too :)
 
 % output format:
 % customers file (column headers) 
@@ -72,8 +72,8 @@ dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'EmptyValue' ,N
 fclose(fileID);
 
 node_id_entireSG = dataArray{:, 1};
-x_pos_entireSG = dataArray{:, 2}; % in cm
-y_pos_entireSG = dataArray{:, 3}; % in cm
+x_pos_entireSG = dataArray{:, 2}; % in m
+y_pos_entireSG = dataArray{:, 3}; % in m
 
 clearvars filename delimiter formatSpec fileID dataArray ans;
 
@@ -84,8 +84,8 @@ origin_x = zeros(length(trip_origin_node), 1);
 origin_y = zeros(length(trip_origin_node), 1);
 for i = 1:length(trip_origin_node)
     cust_iter = find (node_id_entireSG == trip_origin_node(i));
-    origin_x(i) = x_pos_entireSG (cust_iter)/100;
-    origin_y(i) = y_pos_entireSG (cust_iter)/100;
+    origin_x(i) = x_pos_entireSG (cust_iter); % in m
+    origin_y(i) = y_pos_entireSG (cust_iter); % in m
     
 end
 
@@ -94,8 +94,8 @@ dest_x = zeros(length(trip_destination_node), 1);
 dest_y = zeros(length(trip_destination_node), 1);
 for i = 1:length(trip_destination_node)
     cust_iter = find (node_id_entireSG == trip_destination_node(i));
-    dest_x(i) = x_pos_entireSG (cust_iter)/100;
-    dest_y(i) = y_pos_entireSG (cust_iter)/100;
+    dest_x(i) = x_pos_entireSG (cust_iter); % in m
+    dest_y(i) = y_pos_entireSG (cust_iter); % in m
     
 end
 
@@ -134,7 +134,7 @@ filenameC = sprintf('customers_ecbd_%d.txt', length(origin_x));
 fileCustomers = fopen(filenameC,'w');
 
 for j = 1:length(origin_x) 
-    fprintf(fileCustomers,'%0u %0u %0u\n', j, origin_x(j), origin_y(j));
+    fprintf(fileCustomers,'%0u %0f %0f\n', j, origin_x(j), origin_y(j));
 end
 fclose(fileCustomers);
 
@@ -144,7 +144,7 @@ filenameB = sprintf('boookings_ecbd_%d.txt', length(origin_x));
 fileBookings = fopen(filenameB,'w');
 
 for j = 1:length(origin_x) 
-    fprintf(fileBookings,'%0u %0u %0u %0u %0u %0u %0u %0u\n', j, time_sec(j), j, origin_x(j), origin_y(j), dest_x(j), dest_y(j), amod_mode);
+    fprintf(fileBookings,'%0u %0u %0u %0f %0f %0f %0f %0u\n', j, time_sec(j), j, origin_x(j), origin_y(j), dest_x(j), dest_y(j), amod_mode);
 end
 fclose(fileBookings);
 
