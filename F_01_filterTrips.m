@@ -1,6 +1,6 @@
 close all; clear; clc;
 
-% last update: 2016-Mar-09
+% last update: 2016-Mar-15
 % to filter the trips which are within the zone or coming to the zone or
 % ending within the zone
 
@@ -31,8 +31,8 @@ close all; clear; clc;
 % therefore we have to convert them into meters (we do not use coordinates
 % in this script, only the node ids)
 
-% output: 
-% trips in format: 
+% output:
+% trips in format:
 % 1 time_sec, integer
 % 2 booking_id, integer
 % 3 trip_origin_node, integer
@@ -49,7 +49,7 @@ fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
 fclose(fileID);
 
-person_id = dataArray{:, 1};
+%person_id = dataArray{:, 1};
 %tour_no = dataArray{:, 2};
 %tour_purpose = dataArray{:, 3};
 %stop_no = dataArray{:, 4};
@@ -79,6 +79,7 @@ fclose(fileID);
 node_id_eCBD = dataArray{:, 1};
 x_pos_eCBD = dataArray{:, 2}; % in cm
 y_pos_eCBD = dataArray{:, 3}; % in cm
+coord_ecbd = [x_pos_eCBD y_pos_eCBD];
 
 clearvars filename delimiter formatSpec fileID dataArray ans;
 
@@ -102,21 +103,62 @@ clearvars filename delimiter formatSpec fileID dataArray ans;
 disp('4. Find trips which started or ended within the ecbd...')
 ids_witin = [];
 
-for i = 1: length(person_id)
-    [indx, TorF] = find(node_id_eCBD == trip_origin_node(i) | node_id_eCBD == trip_destination_node(i));
-     if (~isempty(indx))
-         ids_witin = [ids_witin; i];
-     end
+indx_array = zeros(length(trip_start_time),1);
+for i = 1: length(trip_start_time)
+    indx = find(node_id_eCBD == trip_origin_node(i) | node_id_eCBD == trip_destination_node(i));
+    if(~isempty(indx))
+        indx_array(i) = i;
+    end
 end
 
-time_before_convert = trip_start_time(ids_witin);
+indx_array = find (indx_array);
+time_before_convert = trip_start_time(indx_array);
 % person_id = person_id(ids_witin); do not have to carry it forward
-trip_origin_node = trip_origin_node(ids_witin);
-trip_destination_node = trip_destination_node(ids_witin);
-trip_purpose = trip_purpose(ids_witin);
-trip_mode = trip_mode(ids_witin);
+trip_origin_node = trip_origin_node(indx_array);
+trip_destination_node = trip_destination_node(indx_array);
+trip_purpose = trip_purpose(indx_array);
+trip_mode = trip_mode(indx_array);
+
+%% find coordinates for each origin and destination
+
+disp('5. Find coordinates for each origin...')
+origin_x = zeros(length(trip_origin_node), 1);
+origin_y = zeros(length(trip_origin_node), 1);
+for i = 1:length(trip_origin_node)
+    cust_iter = find (node_id_eCBD == trip_origin_node(i));
+    if (isempty(cust_iter))
+        cust_iter = find (node_id_entireSG == trip_origin_node(i));
+        % find coordinates of that node
+        pos_xy = [x_pos_entireSG(cust_iter) y_pos_entireSG(cust_iter)];
+        % and find the nearest node to this coodr in cbd and its indx
+        dist_array = pdist2(pos_xy, coord_ecbd, 'euclidean');
+        [M, cust_iter] = min(dist_array);
+    end
+    origin_x(i) = x_pos_eCBD (cust_iter); % in m
+    origin_y(i) = y_pos_eCBD (cust_iter); % in m
+    
+end
+
+disp('6. Find coordinates for each destination...')
+dest_x = zeros(length(trip_destination_node), 1);
+dest_y = zeros(length(trip_destination_node), 1);
+for i = 1:length(trip_destination_node)
+    cust_iter = find (node_id_eCBD == trip_destination_node(i));
+    if (isempty(cust_iter))
+        cust_iter = find (node_id_entireSG == trip_origin_node(i));
+        % find coordinates of that node
+        pos_xy = [x_pos_entireSG(cust_iter) y_pos_entireSG(cust_iter)];
+        % and find the nearest node to this coodr in cbd and its indx
+        dist_array = pdist2(pos_xy, coord_ecbd, 'euclidean');
+        [M, cust_iter] = min(dist_array);
+    end
+    dest_x(i) = x_pos_eCBD (cust_iter); % in m
+    dest_y(i) = y_pos_eCBD (cust_iter); % in m
+    
+end
 
 %% convert time to seconds
+disp('7. Convert time to seconds...')
 % input time is as follows:
 % day starts at 3am and finishes at 26hr
 % the time for trips is in 30 minutes intervals and coded as following:
@@ -155,24 +197,87 @@ time_sec = hours*60*60 + minutes*60; % size after selection
 %% sort trips in ascending order of time
 % to sort the output file use the unix command:
 % i.e., sorting file on the basis of 2nd field , numerically
-% sort -t"," -k2n,2 file 
+% sort -t"," -k2n,2 file
 % in this specific output file use sort -t"," -k1n,1 file
-% '-t' option is used to provide the delimiter in case of files with 
-% delimiter. '-k' is used to specify the keys on the basis of which 
-% the sorting has to be done. The format of '-k' is : '-km,n' where m is 
+% '-t' option is used to provide the delimiter in case of files with
+% delimiter. '-k' is used to specify the keys on the basis of which
+% the sorting has to be done. The format of '-k' is : '-km,n' where m is
 % the starting key and n is the ending key.
 
-%% save to file
-disp('5. Save to file...')
-fileTOSave = sprintf('raw_bookings_ecbd_%d.txt', length(ids_witin));
-bookingFile = fopen(fileTOSave,'w');
-for j = 1:length(ids_witin)
-    fprintf(bookingFile,'%0u,%u,%0u,%0u,%s,%s\n', time_sec(j), j, trip_origin_node(j), trip_destination_node(j), trip_purpose{j}, trip_mode{j});
-end
-fclose(bookingFile);
+% %% save to file
+% disp('5. Save to file...')
+% fileTOSave = sprintf('raw_bookings_ecbd_%d.txt', length(ids_witin));
+% bookingFile = fopen(fileTOSave,'w');
+% for j = 1:length(ids_witin)
+%     fprintf(bookingFile,'%0u,%u,%0u,%0u,%s,%s\n', time_sec(j), j, trip_origin_node(j), trip_destination_node(j), trip_purpose{j}, trip_mode{j});
+% end
+% fclose(bookingFile);
+%
+% % newBooking_f = sprintf('bookings_ecbd_%d.txt', length(ids_witin));
+% % delimiter = ' ';
+% % dlmwrite(newBooking_f, customers_in_cbd, delimiter);
+%
+% disp('All done.')
 
-% newBooking_f = sprintf('bookings_ecbd_%d.txt', length(ids_witin));
-% delimiter = ' ';
-% dlmwrite(newBooking_f, customers_in_cbd, delimiter);
+%% Remove number from the carsharing mode
+% in the original data the car sharing mode has a number of people who
+% share the ride, i.e., car sharing 3 means that there is a driver plus 2
+% extra passengers (while the passengers can get off somewhere on the way,
+% we do not know exactly where they board and where they alight)
+
+% TODO
+
+%% choose mode of transport and trip purpose
+disp('8. choose mode of transport and trip purpose...')
+% available modes: BusTravel, MRT, PrivateBus, Car Sharing, Car, Taxi,
+% Motorcycle
+%chosen_mode = 'Car Sharing';
+excluded_mode = 'MRT';
+excluded_mode2 = 'BusTravel';
+indx_mode1 = find(strcmp(trip_mode,excluded_mode));
+indx_mode2 = find(strcmp(trip_mode,excluded_mode2));
+indx_mode = sortrows([indx_mode1; indx_mode2]);
+% trip purpose: Work, Home, Other, Shop, Education
+%chosen_tripPurpose = 'Work';
+%indx_purpose = find(strcmp(trip_purpose,chosen_tripPurpose));
+
+% choose if the filter should be by mode (indx_mode) or by purpose
+% (indx_purpose)
+apply_chosen_filter = false;
+apply_excluded_filter = true;
+filter = indx_mode;
+if (apply_chosen_filter)
+    time_sec = time_sec (filter);
+    origin_x = origin_x (filter);
+    origin_y = origin_y (filter);
+    dest_x = dest_x (filter);
+    dest_y = dest_y (filter);
+elseif (apply_excluded_filter)
+    time_sec (filter) = [];
+    origin_x (filter) = [];
+    origin_y (filter) = [];
+    dest_x (filter) = [];
+    dest_y (filter) = [];
+end
+
+%% save to file
+disp('9. Save customer file...')
+filenameC = sprintf('customers_ecbd_%d.txt', length(origin_x));
+fileCustomers = fopen(filenameC,'w');
+
+for j = 1:length(origin_x)
+    fprintf(fileCustomers,'%0u %0f %0f\n', j, origin_x(j), origin_y(j));
+end
+fclose(fileCustomers);
+
+disp('10. Save booking file...')
+amod_mode = 1; % mode = 1 if this is amod trip
+filenameB = sprintf('boookings_ecbd_%d.txt', length(origin_x));
+fileBookings = fopen(filenameB,'w');
+
+for j = 1:length(origin_x)
+    fprintf(fileBookings,'%0u %0u %0u %0f %0f %0f %0f %0u\n', j, time_sec(j), j, origin_x(j), origin_y(j), dest_x(j), dest_y(j), amod_mode);
+end
+fclose(fileBookings);
 
 disp('All done.')
