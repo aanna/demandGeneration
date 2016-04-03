@@ -23,8 +23,8 @@ clearvars filename delimiter startRow formatSpec fileID dataArray ans;
 disp('2. Change booking time...')
 % 
 for i =1 : length (bk_id)
-   if (bk_time < sim_start_time)
-    bk_time = bk_time(i) + end_day;
+   if (bk_time (i) < sim_start_time)
+    bk_time (i) = bk_time(i) + end_day;
    else
        bk_time (i) = bk_time(i) - sim_start_time;
    end
@@ -38,7 +38,7 @@ disp('Sort based on time...')
 disp('3. Save converted but not sorted bookings...')
 
 amod_mode = 1; % mode = 1 if this is amod trip
-filenameB = sprintf('boookings_ecbd_converted_%d.txt', length(bk_id));
+filenameB = sprintf('boookings_ecbd_start%dam_%d.txt', sim_start_time/3600, length(bk_id));
 fileBookings = fopen(filenameB,'w');
 
 for j = 1:length(bk_id)
