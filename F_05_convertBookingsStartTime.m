@@ -32,12 +32,12 @@ disp('3. Sort based on time...')
 index = -1;
 for i = 1 : length(bk_id)
     if (bk_time(i) >= sim_start_time)
-        index = find(bk_time(i) >= sim_start_time); 
+        index = i;
         break;
     end
 end
 
-% shift all vectors by index
+%% shift all vectors by index
 new_time = circshift(new_time, -index);
 origX = circshift(origX, -index);
 origY = circshift(origY, -index);
