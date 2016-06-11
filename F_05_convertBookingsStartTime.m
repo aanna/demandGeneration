@@ -32,7 +32,7 @@ disp('3. Sort based on time...')
 index = -1;
 for i = 1 : length(bk_id)
     if (bk_time(i) >= sim_start_time)
-        index = i;
+        index = i - 1;
         break;
     end
 end
