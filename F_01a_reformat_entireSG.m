@@ -42,7 +42,7 @@ close all; clear; clc;
 
 %% import trips for the entire Singapore
 disp('1. Import the activity-based trips...')
-filename = '/home/kasia/Dropbox/matlab/2016-03-Demand_generation/input/activity_schedule.txt';
+filename = '/home/kasia/Dropbox/matlab/2016-03-Demand_generation/input-2016-07/das.csv';
 delimiter = ',';
 formatSpec = '%s%f%s%f%s%f%f%s%s%f%f%f%f%f%[^\n\r]';
 fileID = fopen(filename,'r');
@@ -69,7 +69,7 @@ clearvars filename delimiter formatSpec fileID dataArray ans;
 %% import list of nodes for the entire Singapore
 % to find coordinates of the nodes
 disp('2. Import list of nodes for the entire Singapore...')
-filename = 'input/entireSG_nodes.csv';
+filename = 'input-2016-07/extcbd_nodes.csv';
 delimiter = ',';
 formatSpec = '%f%f%f%[^\n\r]';
 fileID = fopen(filename,'r');
@@ -118,7 +118,7 @@ indx_purpose = find(strcmp(trip_purpose,chosen_tripPurpose));
 
 % choose if the filter should be by mode (indx_mode) or by purpose
 % (indx_purpose)
-apply_filter = true;
+apply_filter = false;
 filter = indx_purpose;
 if (apply_filter)
     origin_x = origin_x (filter);
@@ -144,23 +144,23 @@ colorbar
 axis xy
 
 %% save to file
-% disp('5. Save customer file...')
-% filenameC = sprintf('customers_entireSG_%d.txt', length(origin_x));
-% fileCustomers = fopen(filenameC,'w');
-% 
-% for j = 1:length(origin_x) 
-%     fprintf(fileCustomers,'%0u %0f %0f\n', j, origin_x(j), origin_y(j));
-% end
-% fclose(fileCustomers);
-% 
-% disp('6. Save booking file...')
-% amod_mode = 1; % mode = 1 if this is amod trip
-% filenameB = sprintf('boookings_entireSG_%d.txt', length(origin_x));
-% fileBookings = fopen(filenameB,'w');
-% 
-% for j = 1:length(origin_x) 
-%     fprintf(fileBookings,'%0u %0f %0f %0f %0f %0u\n', j, origin_x(j), origin_y(j), dest_x(j), dest_y(j), amod_mode);
-% end
-% fclose(fileBookings);
-% 
-% disp('All done.')
+disp('5. Save customer file...')
+filenameC = sprintf('customers_entireSG_%d.txt', length(origin_x));
+fileCustomers = fopen(filenameC,'w');
+
+for j = 1:length(origin_x) 
+    fprintf(fileCustomers,'%0u %0f %0f\n', j, origin_x(j), origin_y(j));
+end
+fclose(fileCustomers);
+
+disp('6. Save booking file...')
+amod_mode = 1; % mode = 1 if this is amod trip
+filenameB = sprintf('boookings_entireSG_%d.txt', length(origin_x));
+fileBookings = fopen(filenameB,'w');
+
+for j = 1:length(origin_x) 
+    fprintf(fileBookings,'%0u %0f %0f %0f %0f %0u\n', j, origin_x(j), origin_y(j), dest_x(j), dest_y(j), amod_mode);
+end
+fclose(fileBookings);
+
+disp('All done.')
