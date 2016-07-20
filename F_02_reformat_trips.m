@@ -1,7 +1,7 @@
 close all; clear; clc;
 
 % last update: 2016-Mar-09
-% script converts the trips into the format consistent with AMOD simulator
+% script converts the trips into the format consistent with AMOD simulator.
 % it can also be defined which mode of transport or what purpose of trips
 % we want to substitute by amod. By default all trips are selected.
 

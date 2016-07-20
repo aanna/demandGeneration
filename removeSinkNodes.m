@@ -2,13 +2,13 @@ close all; clear; clc;
 
 % last update: 2016-July-18
 
-% this script filters the network nodes to select only those nodes, which
+% this script filters the network nodes to remove nodes, which
 % should not be origin/ destination of the trips
 
 %% import all nodes
 disp('1. Import list of nodes to be sorted...')
-filename = 'input-2016-07/ecbd_nodes_formatted.csv';
-delimiter = ',';
+filename = 'input-2016-07/ecbd_nodes20160719.txt';
+delimiter = ' ';
 formatSpec = '%f%f%f%[^\n\r]';
 fileID = fopen(filename,'r');
 
@@ -41,12 +41,14 @@ disp('3. filter nodes...')
 
 [selectedNodes, indexInA] = setdiff(node_id_entireSG, sinkNodes);
 
-
-
 %% save list to file
 
 disp('4. Save to file...')
-filenameC = sprintf('ecbd_nodes_%d.txt', length(selectedNodes));
+
+c = datetime('today');
+dateString = datestr(c);
+
+filenameC = sprintf('ecbd_nodes_noSink_%s.txt', dateString);
 fileNodes = fopen(filenameC,'w');
 
 for j = 1:length(selectedNodes)
@@ -54,6 +56,7 @@ for j = 1:length(selectedNodes)
     fprintf(fileNodes,'%0u %0f %0f\n', node_id_entireSG(ind), pos_x(ind), pos_y(ind));
     
 end
+
 fclose(fileNodes);
 
 disp('Done.')

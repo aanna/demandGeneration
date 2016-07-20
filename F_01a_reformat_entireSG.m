@@ -69,8 +69,8 @@ clearvars filename delimiter formatSpec fileID dataArray ans;
 %% import list of nodes for the entire Singapore
 % to find coordinates of the nodes
 disp('2. Import list of nodes for the entire Singapore...')
-filename = 'input-2016-07/extcbd_nodes.csv';
-delimiter = ',';
+filename = 'input-2016-07/ecbd_nodes_1147.txt';
+delimiter = ' ';
 formatSpec = '%f%f%f%[^\n\r]';
 fileID = fopen(filename,'r');
 

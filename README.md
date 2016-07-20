@@ -30,3 +30,9 @@ day starts at 3am and finishes at 26hr
 the time for trips is in 30 minutes intervals and coded as following:
 - 3.25 -> trips between 3-3:30am
 - 3.75 -> trips between 3:30-4am etc up to 26.75 for the trips between 2:30-3am
+
+-----------update 19-July-2016------------
+demand generation can be done in one step:
+1. run file F_01_filterTrips.m
+- input: activity based schedule from mid term
+- output customers and bookings for amod simulator
