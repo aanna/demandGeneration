@@ -2,7 +2,7 @@ close all; clear; clc;
 
 % last update: 2016-July-19
 % this script assumes that the trips are already filetered to the analyzed
-% zone and mode. 
+% zone and mode.
 % based on the mid term output format script generates the amod trips.
 
 % input is the activity-based schedule from SimMobility mid-term
@@ -84,6 +84,31 @@ coord_ecbd = [x_pos_eCBD y_pos_eCBD];
 
 clearvars filename delimiter formatSpec fileID dataArray ans;
 
+%% import list of all (sink and source) nodes
+disp('3. import list of all (sink and source) nodes...')
+filename = 'input-2016-07/ecbd_nodes_all_19-July-2016.csv';
+delimiter = ',';
+formatSpec = '%f%f%f%[^\n\r]';
+fileID = fopen(filename,'r');
+
+dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'EmptyValue' ,NaN, 'ReturnOnError', false);
+fclose(fileID);
+
+node_id_all = dataArray{:, 1};
+node_x_all = dataArray{:, 2};
+node_y_all = dataArray{:, 3};
+
+clearvars filename delimiter formatSpec fileID dataArray ans;
+
+
+%% Difference between all nodes and list without sink nodes
+disp('3. Difference between all nodes and list without sink nodes...')
+
+% find replacement for the sink nodes
+
+
+
+
 %% convert time to seconds
 disp('3. Convert time to seconds...')
 % input time is as follows:
@@ -128,12 +153,19 @@ origin_y = zeros(length(trip_origin_node), 1);
 for i = 1:length(trip_origin_node)
     cust_iter = find (node_id_eCBD == trip_origin_node(i));
     if (isempty(cust_iter))
-        % it is a sink node and a replacement for this node has to be found
+        % it is a sink or source node and replacement for this node has to be found
+        
+        % find node in all nodes and get its position
+        cust_iter = find (node_id_all == trip_origin_node(i));
+        origin_x(i) = node_x_all (cust_iter); % in m
+        origin_y(i) = node_y_all (cust_iter); % in m
+        
+    else
+        % the node is found in the list of noSink nodes
+        origin_x(i) = x_pos_eCBD (cust_iter); % in m
+        origin_y(i) = y_pos_eCBD (cust_iter); % in m
         
     end
-    origin_x(i) = x_pos_eCBD (cust_iter); % in m
-    origin_y(i) = y_pos_eCBD (cust_iter); % in m
-    
 end
 
 disp('5. Find coordinates for each destination...')
@@ -142,12 +174,19 @@ dest_y = zeros(length(trip_destination_node), 1);
 for i = 1:length(trip_destination_node)
     cust_iter = find (node_id_eCBD == trip_destination_node(i));
     if (isempty(cust_iter))
-        % it is a sink node and a replacement for this node has to be found
+        % it is a sink or source node and replacement for this node has to be found
         
-    end
-    dest_x(i) = x_pos_eCBD (cust_iter); % in m
-    dest_y(i) = y_pos_eCBD (cust_iter); % in m
-    
+        % find node in all nodes and get its position
+        cust_iter = find (node_id_all == trip_origin_node(i));
+        dest_x(i) = node_x_all (cust_iter); % in m
+        dest_y(i) = node_y_all (cust_iter); % in m
+        
+    else
+        % the node is found in the list of noSink nodes
+        dest_x(i) = x_pos_eCBD (cust_iter); % in m
+        dest_y(i) = y_pos_eCBD (cust_iter); % in m
+        
+    end 
 end
 
 %% save to file
